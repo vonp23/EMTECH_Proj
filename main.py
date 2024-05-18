@@ -3,35 +3,49 @@ import numpy as np
 import streamlit as st
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2,preprocess_input as mobilenet_v2_preprocess_input
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input as mobilenet_v2_preprocess_input
 
+# Load the pre-trained model
 model = tf.keras.models.load_model("mdl_wt.hdf5")
 
-uploaded_file = st.file_uploader("Choose a image file", type="jpg")
+# Mapping of class indices to labels
+map_dict = {
+    0: 'dog',
+    1: 'horse',
+    2: 'elephant',
+    3: 'butterfly',
+    4: 'chicken',
+    5: 'cat',
+    6: 'cow',
+    7: 'sheep',
+    8: 'spider',
+    9: 'squirrel'
+}
 
-map_dict = {0: 'dog',
-            1: 'horse',
-            2: 'elephant',
-            3: 'butterfly',
-            4: 'chicken',
-            5: 'cat',
-            6: 'cow',
-            7: 'sheep',
-            8: 'spider',
-            9: 'squirrel'}
+def main():
+    st.title("Image Classification with Streamlit")
 
-if uploaded_file is not None:
-    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-    opencv_image = cv2.imdecode(file_bytes, 1)
-    opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-    resized = cv2.resize(opencv_image,(224,224))
+    # File uploader widget
+    uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg"])
 
-    st.image(opencv_image, channels="RGB")
+    if uploaded_file is not None:
+        # Read and preprocess the uploaded image
+        opencv_image = np.array(bytearray(uploaded_file.read()), dtype=np.uint8)
+        opencv_image = cv2.imdecode(opencv_image, 1)
+        opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
+        resized_image = cv2.resize(opencv_image, (224, 224))
+        resized_image = mobilenet_v2_preprocess_input(resized_image)
+        img_reshape = resized_image[np.newaxis, ...]
 
-    resized = mobilenet_v2_preprocess_input(resized)
-    img_reshape = resized[np.newaxis,...]
+        # Display the uploaded image
+        st.image(opencv_image, caption='Uploaded Image', use_column_width=True)
 
-    Genrate_pred = st.button("Generate Prediction")
-    if Genrate_pred:
-        prediction = model.predict(img_reshape).argmax()
-        st.title("Predicted Label for the image is {}".format(map_dict[prediction]))
+        # Button to generate prediction
+        if st.button("Generate Prediction"):
+            # Make prediction
+            prediction = model.predict(img_reshape).argmax()
+            predicted_label = map_dict.get(prediction, "Unknown")
+            st.success(f"Predicted Label: {predicted_label}")
+
+if __name__ == "__main__":
+    main()
