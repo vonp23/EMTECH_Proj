@@ -11,7 +11,7 @@ tf.get_logger().setLevel('ERROR')
 # Load the model
 @st.cache(allow_output_mutation=True)
 def load_model():
-    return tf.keras.models.load_model("mdl_wt.hdf5")
+    return tf.keras.models.load_model("mdl_wt.hdf5", custom_objects={'BatchNormalization': tf.keras.layers.BatchNormalization})
 
 model = load_model()
 
@@ -45,4 +45,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
